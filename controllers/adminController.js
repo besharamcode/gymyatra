@@ -1,13 +1,13 @@
-const User = require('../models/User');
-const Plan = require('../models/Plan');
-const Exercise = require('../models/Exercise');
-const DietPlan = require('../models/DietPlan');
-const Progress = require('../models/Progress');
+import User from '../models/User.js';
+import Plan from '../models/Plan.js';
+import Exercise from '../models/Exercise.js';
+import DietPlan from '../models/DietPlan.js';
+import Progress from '../models/Progress.js';
 
 // @desc    Get all users
 // @route   GET /api/admin/users
 // @access  Private/Admin
-exports.getUsers = async (req, res) => {
+export const getUsers = async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('-password');
 
@@ -28,7 +28,7 @@ exports.getUsers = async (req, res) => {
 // @desc    Get user by ID
 // @route   GET /api/admin/users/:id
 // @access  Private/Admin
-exports.getUserById = async (req, res) => {
+export const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
 
@@ -55,7 +55,7 @@ exports.getUserById = async (req, res) => {
 // @desc    Create exercise
 // @route   POST /api/admin/exercises
 // @access  Private/Admin
-exports.createExercise = async (req, res) => {
+export const createExercise = async (req, res) => {
   try {
     const { name, description, sets, reps, imageUrl, muscleGroup } = req.body;
 
@@ -84,7 +84,7 @@ exports.createExercise = async (req, res) => {
 // @desc    Get all exercises
 // @route   GET /api/admin/exercises
 // @access  Private/Admin
-exports.getExercises = async (req, res) => {
+export const getExercises = async (req, res) => {
   try {
     const exercises = await Exercise.find();
 
@@ -105,14 +105,10 @@ exports.getExercises = async (req, res) => {
 // @desc    Create diet plan
 // @route   POST /api/admin/diet-plans
 // @access  Private/Admin
-exports.createDietPlan = async (req, res) => {
+export const createDietPlan = async (req, res) => {
   try {
-    const { title, description, meals } = req.body;
-
     const dietPlan = await DietPlan.create({
-      title,
-      description,
-      meals,
+      ...req.body,
       createdBy: req.user._id,
     });
 
@@ -132,7 +128,7 @@ exports.createDietPlan = async (req, res) => {
 // @desc    Get all diet plans
 // @route   GET /api/admin/diet-plans
 // @access  Private/Admin
-exports.getDietPlans = async (req, res) => {
+export const getDietPlans = async (req, res) => {
   try {
     const dietPlans = await DietPlan.find();
 
@@ -153,7 +149,7 @@ exports.getDietPlans = async (req, res) => {
 // @desc    Create plan
 // @route   POST /api/admin/plans
 // @access  Private/Admin
-exports.createPlan = async (req, res) => {
+export const createPlan = async (req, res) => {
   try {
     const { title, description, assignedTo, schedule, dietPlan } = req.body;
 
@@ -187,7 +183,7 @@ exports.createPlan = async (req, res) => {
 // @desc    Get user's progress
 // @route   GET /api/admin/users/:userId/progress
 // @access  Private/Admin
-exports.getUserProgress = async (req, res) => {
+export const getUserProgress = async (req, res) => {
   try {
     const progress = await Progress.find({ userId: req.params.userId })
       .sort({ date: -1 })
@@ -197,6 +193,49 @@ exports.getUserProgress = async (req, res) => {
       success: true,
       count: progress.length,
       data: progress,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// @desc    Update diet plan
+// @route   PUT /api/admin/diet-plans/:id
+// @access  Private/Admin
+export const updateDietPlan = async (req, res) => {
+  try {
+    const { title, description, targetGroup, dailyCalories, protein, carbs, fat, meals } = req.body;
+
+    const dietPlan = await DietPlan.findById(req.params.id);
+
+    if (!dietPlan) {
+      return res.status(404).json({
+        success: false,
+        message: 'Diet plan not found',
+      });
+    }
+
+    dietPlan.title = title || dietPlan.title;
+    dietPlan.description = description || dietPlan.description;
+    dietPlan.targetGroup = targetGroup || dietPlan.targetGroup;
+    dietPlan.dailyCalories = dailyCalories || dietPlan.dailyCalories;
+    dietPlan.protein = protein || dietPlan.protein;
+    dietPlan.carbs = carbs || dietPlan.carbs;
+    dietPlan.fat = fat || dietPlan.fat;
+
+    if (meals && meals.length > 0) {
+      dietPlan.meals = meals;
+    }
+
+    const updatedDietPlan = await dietPlan.save();
+
+    res.json({
+      success: true,
+      data: updatedDietPlan,
     });
   } catch (error) {
     console.error(error);

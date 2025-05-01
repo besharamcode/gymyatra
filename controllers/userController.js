@@ -1,12 +1,12 @@
-const User = require('../models/User');
-const Plan = require('../models/Plan');
-const Progress = require('../models/Progress');
-const Exercise = require('../models/Exercise');
+import User from '../models/User.js';
+import Plan from '../models/Plan.js';
+import Progress from '../models/Progress.js';
+import Exercise from '../models/Exercise.js';
 
 // @desc    Get user's plan
 // @route   GET /api/user/my-plan
 // @access  Private
-exports.getMyPlan = async (req, res) => {
+export const getMyPlan = async (req, res) => {
   try {
     const plans = await Plan.find({ assignedTo: req.user._id })
       .populate('dietPlan')
@@ -38,7 +38,7 @@ exports.getMyPlan = async (req, res) => {
 // @desc    Submit progress
 // @route   POST /api/user/progress
 // @access  Private
-exports.submitProgress = async (req, res) => {
+export const submitProgress = async (req, res) => {
   try {
     const { weight, completedExercises, notes } = req.body;
 
@@ -66,7 +66,7 @@ exports.submitProgress = async (req, res) => {
 // @desc    Get progress history
 // @route   GET /api/user/progress-history
 // @access  Private
-exports.getProgressHistory = async (req, res) => {
+export const getProgressHistory = async (req, res) => {
   try {
     const progress = await Progress.find({ userId: req.user._id })
       .sort({ date: -1 })
@@ -88,7 +88,7 @@ exports.getProgressHistory = async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/user/profile
 // @access  Private
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const { name, email, profilePic } = req.body;
 

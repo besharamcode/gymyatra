@@ -1,11 +1,15 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const MealSchema = new mongoose.Schema({
-  time: {
+  name: {
     type: String,
     required: true,
   },
-  foodItem: {
+  foods: {
+    type: String,
+    required: true,
+  },
+  time: {
     type: String,
     required: true,
   },
@@ -26,6 +30,26 @@ const DietPlanSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    targetGroup: {
+      type: String,
+      required: true,
+    },
+    dailyCalories: {
+      type: Number,
+      required: true,
+    },
+    protein: {
+      type: Number,
+      required: true,
+    },
+    carbs: {
+      type: Number,
+      required: true,
+    },
+    fat: {
+      type: Number,
+      required: true,
+    },
     meals: [MealSchema],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -35,4 +59,6 @@ const DietPlanSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model('DietPlan', DietPlanSchema); 
+const DietPlan = mongoose.model('DietPlan', DietPlanSchema);
+
+export default DietPlan; 

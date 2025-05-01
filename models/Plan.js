@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ScheduleSchema = new mongoose.Schema({
   day1: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Exercise' }],
@@ -40,4 +40,6 @@ const PlanSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model('Plan', PlanSchema); 
+const Plan = mongoose.model('Plan', PlanSchema);
+
+export default Plan; 
