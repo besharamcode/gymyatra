@@ -16,15 +16,14 @@ export const getDietPlans = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.user.token;
-      
+
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       };
-      
+
       const response = await axios.get('/api/admin/diet-plans', config);
-      
       return response.data.data;
     } catch (error) {
       const message =
@@ -33,7 +32,7 @@ export const getDietPlans = createAsyncThunk(
           error.response.data.message) ||
         error.message ||
         error.toString();
-        
+
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -45,15 +44,15 @@ export const createDietPlan = createAsyncThunk(
   async (dietPlanData, thunkAPI) => {
     try {
       const token = thunkAPI.getState().auth.user.token;
-      
+
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       };
-      
+
       const response = await axios.post('/api/admin/diet-plans', dietPlanData, config);
-      
+
       return response.data.data;
     } catch (error) {
       const message =
@@ -62,7 +61,36 @@ export const createDietPlan = createAsyncThunk(
           error.response.data.message) ||
         error.message ||
         error.toString();
-        
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Update diet plan
+export const updateDietPlan = createAsyncThunk(
+  'dietPlans/update',
+  async ({ id, dietPlanData }, thunkAPI) => {
+    try {
+      const token = thunkAPI.getState().auth.user.token;
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.put(`/api/admin/diet-plans/${id}`, dietPlanData, config);
+
+      return response.data.data;
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -105,6 +133,22 @@ const dietPlanSlice = createSlice({
         state.dietPlans.push(action.payload);
       })
       .addCase(createDietPlan.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Update diet plan
+      .addCase(updateDietPlan.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateDietPlan.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.dietPlans = state.dietPlans.map((dietPlan) => 
+          dietPlan._id === action.payload._id ? action.payload : dietPlan
+        );
+      })
+      .addCase(updateDietPlan.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

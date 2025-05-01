@@ -1,152 +1,105 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { FiPlus, FiEdit, FiTrash2, FiCoffee } from 'react-icons/fi';
-import { toast } from 'react-toastify';
-import { getDietPlans, createDietPlan } from '../../redux/dietPlanSlice';
-
-// Mock diet plans data for demonstration
-const MOCK_DIET_PLANS = [
-  {
-    _id: '1',
-    title: 'Weight Loss Plan',
-    description: 'A calorie-deficit diet to help promote healthy weight loss.',
-    targetGroup: 'Weight Loss',
-    dailyCalories: 1800,
-    protein: 150,
-    carbs: 150,
-    fat: 50,
-    meals: [
-      { name: 'Breakfast', foods: 'Oatmeal with berries and protein shake', calories: 400 },
-      { name: 'Lunch', foods: 'Grilled chicken salad with olive oil dressing', calories: 550 },
-      { name: 'Dinner', foods: 'Baked salmon with vegetables', calories: 650 },
-      { name: 'Snack', foods: 'Greek yogurt with nuts', calories: 200 },
-    ]
-  },
-  {
-    _id: '2',
-    title: 'Muscle Gain Plan',
-    description: 'A high-protein diet to support muscle growth and recovery.',
-    targetGroup: 'Muscle Gain',
-    dailyCalories: 3200,
-    protein: 200,
-    carbs: 400,
-    fat: 70,
-    meals: [
-      { name: 'Breakfast', foods: 'Eggs, oatmeal, banana, protein shake', calories: 800 },
-      { name: 'Lunch', foods: 'Chicken, rice, vegetables, olive oil', calories: 900 },
-      { name: 'Dinner', foods: 'Steak, sweet potato, broccoli', calories: 850 },
-      { name: 'Pre-workout', foods: 'Protein shake, banana', calories: 300 },
-      { name: 'Post-workout', foods: 'Protein shake, fast-digesting carbs', calories: 350 },
-    ]
-  },
-  {
-    _id: '3',
-    title: 'Maintenance Plan',
-    description: 'A balanced diet to maintain current weight and support general health.',
-    targetGroup: 'Maintenance',
-    dailyCalories: 2400,
-    protein: 120,
-    carbs: 280,
-    fat: 80,
-    meals: [
-      { name: 'Breakfast', foods: 'Whole grain toast, eggs, avocado', calories: 500 },
-      { name: 'Lunch', foods: 'Turkey sandwich with vegetables', calories: 650 },
-      { name: 'Dinner', foods: 'Grilled fish with quinoa and vegetables', calories: 750 },
-      { name: 'Snack', foods: 'Apple with nut butter', calories: 250 },
-      { name: 'Evening Snack', foods: 'Cottage cheese with berries', calories: 250 },
-    ]
-  }
-];
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { FiPlus, FiEdit, FiTrash2, FiCoffee } from "react-icons/fi";
+import { toast } from "react-toastify";
+import {
+  getDietPlans,
+  createDietPlan,
+  updateDietPlan,
+} from "../../redux/dietPlanSlice";
 
 const AdminDietPlans = () => {
   const dispatch = useDispatch();
-  const { dietPlans: apiDietPlans, isLoading: apiLoading } = useSelector((state) => state.dietPlans);
+  const { dietPlans: apiDietPlans, isLoading: apiLoading } = useSelector(
+    (state) => state.dietPlans
+  );
   const [dietPlans, setDietPlans] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    targetGroup: '',
-    dailyCalories: '',
-    protein: '',
-    carbs: '',
-    fat: '',
+    title: "",
+    description: "",
+    targetGroup: "",
+    dailyCalories: "",
+    protein: "",
+    carbs: "",
+    fat: "",
     meals: [
-      { name: 'Breakfast', foods: '', calories: '' },
-      { name: 'Lunch', foods: '', calories: '' },
-      { name: 'Dinner', foods: '', calories: '' }
-    ]
+      { name: "Breakfast", foods: "", calories: "", time: "" },
+      { name: "Lunch", foods: "", calories: "", time: "" },
+      { name: "Snack", foods: "", calories: "", time: "" },
+      { name: "Dinner", foods: "", calories: "", time: "" },
+    ],
   });
-  
+
   const targetGroups = [
-    'Weight Loss', 'Muscle Gain', 'Maintenance', 'Performance', 'General Health'
+    "Weight Loss",
+    "Muscle Gain",
+    "Maintenance",
+    "Performance",
+    "General Health",
   ];
 
   useEffect(() => {
     // Try to fetch from API but fallback to mock data if not available
     dispatch(getDietPlans());
-    setIsLoading(true);
   }, [dispatch]);
-  
+
   useEffect(() => {
     // If API data is available, use it
     if (apiDietPlans && apiDietPlans.length > 0) {
       setDietPlans(apiDietPlans);
-      setIsLoading(false);
-    } else if (!apiLoading) {
-      // If API call completed but no data, use mock data
-      setDietPlans(MOCK_DIET_PLANS);
-      setIsLoading(false);
     }
   }, [apiDietPlans, apiLoading]);
 
   // Filter diet plans based on search term
-  const filteredPlans = dietPlans?.filter(plan => 
-    plan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plan.targetGroup?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPlans = dietPlans?.filter(
+    (plan) =>
+      plan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plan.targetGroup?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   // Handle opening the add/edit modal
   const handleOpenModal = (plan = null) => {
     if (plan) {
       // Ensure plan.meals is an array with at least 3 meals
-      const meals = plan.meals && plan.meals.length > 0 
-        ? [...plan.meals]
-        : [
-            { name: 'Breakfast', foods: '', calories: '' },
-            { name: 'Lunch', foods: '', calories: '' },
-            { name: 'Dinner', foods: '', calories: '' }
-          ];
-            
+      const meals =
+        plan.meals && plan.meals.length > 0
+          ? [...plan.meals]
+          : [
+              { name: "Breakfast", foods: "", calories: "", time: "" },
+              { name: "Lunch", foods: "", calories: "", time: "" },
+              { name: "Snack", foods: "", calories: "", time: "" },
+              { name: "Dinner", foods: "", calories: "", time: "" },
+            ];
+
       setSelectedPlan(plan);
       setFormData({
-        title: plan.title || '',
-        description: plan.description || '',
-        targetGroup: plan.targetGroup || '',
-        dailyCalories: plan.dailyCalories || '',
-        protein: plan.protein || '',
-        carbs: plan.carbs || '',
-        fat: plan.fat || '',
-        meals
+        title: plan.title || "",
+        description: plan.description || "",
+        targetGroup: plan.targetGroup || "",
+        dailyCalories: plan.dailyCalories || "",
+        protein: plan.protein || "",
+        carbs: plan.carbs || "",
+        fat: plan.fat || "",
+        meals,
       });
     } else {
       setSelectedPlan(null);
       setFormData({
-        title: '',
-        description: '',
-        targetGroup: '',
-        dailyCalories: '',
-        protein: '',
-        carbs: '',
-        fat: '',
+        title: "",
+        description: "",
+        targetGroup: "",
+        dailyCalories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
         meals: [
-          { name: 'Breakfast', foods: '', calories: '' },
-          { name: 'Lunch', foods: '', calories: '' },
-          { name: 'Dinner', foods: '', calories: '' }
-        ]
+          { name: "Breakfast", foods: "", calories: "", time: "" },
+          { name: "Lunch", foods: "", calories: "", time: "" },
+          { name: "Snack", foods: "", calories: "", time: "" },
+          { name: "Dinner", foods: "", calories: "", time: "" },
+        ],
       });
     }
     setShowModal(true);
@@ -156,7 +109,7 @@ const AdminDietPlans = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -165,12 +118,12 @@ const AdminDietPlans = () => {
     const updatedMeals = [...formData.meals];
     updatedMeals[index] = {
       ...updatedMeals[index],
-      [field]: value
+      [field]: value,
     };
-    
+
     setFormData({
       ...formData,
-      meals: updatedMeals
+      meals: updatedMeals,
     });
   };
 
@@ -180,8 +133,8 @@ const AdminDietPlans = () => {
       ...formData,
       meals: [
         ...formData.meals,
-        { name: `Meal ${formData.meals.length + 1}`, foods: '', calories: '' }
-      ]
+        { name: `Meal ${formData.meals.length + 1}`, foods: "", calories: "" },
+      ],
     });
   };
 
@@ -191,79 +144,81 @@ const AdminDietPlans = () => {
       toast.error("You must have at least one meal");
       return;
     }
-    
+
     const updatedMeals = [...formData.meals];
     updatedMeals.splice(index, 1);
-    
+
     setFormData({
       ...formData,
-      meals: updatedMeals
+      meals: updatedMeals,
     });
   };
 
   // Handle form submission (add or update)
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!formData.title || !formData.description || !formData.targetGroup) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
-    
+
     // Validate that at least one meal has both foods and calories
     const validMeals = formData.meals.filter(
-      meal => meal.name && meal.foods && meal.calories
+      (meal) => meal.name && meal.foods && meal.calories
     );
-    
+
     if (validMeals.length === 0) {
-      toast.error('Please provide details for at least one meal');
+      toast.error("Please provide details for at least one meal");
       return;
     }
-    
+
     if (selectedPlan) {
       // Update existing diet plan
-      const updatedPlan = {
-        ...selectedPlan,
-        ...formData
-      };
-      
-      // In a real app, dispatch update action
-      // For now, update local state
-      setDietPlans(dietPlans.map(plan => 
-        plan._id === selectedPlan._id ? updatedPlan : plan
-      ));
-      toast.success('Diet plan updated successfully');
+      try {
+        dispatch(
+          updateDietPlan({
+            id: selectedPlan._id,
+            dietPlanData: formData,
+          })
+        )
+          .unwrap()
+          .then(() => {
+            toast.success("Diet plan updated successfully");
+            setShowModal(false);
+          })
+          .catch((error) => {
+            toast.error(error || "Failed to update diet plan");
+          });
+      } catch (error) {
+        toast.error("An error occurred while updating the diet plan");
+      }
     } else {
       // Add new diet plan
-      const newPlan = {
-        _id: `new-${Date.now()}`,
-        ...formData
-      };
-      
-      // In a real app, dispatch create action
-      // For now, update local state 
-      setDietPlans([...dietPlans, newPlan]);
-      toast.success('Diet plan created successfully');
-      
-      // Try API call as well (this may fail if API isn't ready)
       try {
-        dispatch(createDietPlan(formData));
+        dispatch(createDietPlan(formData))
+          .unwrap()
+          .then(() => {
+            toast.success("Diet plan created successfully");
+            setShowModal(false);
+          })
+          .catch((error) => {
+            toast.error(error || "Failed to create diet plan");
+          });
       } catch (error) {
-        console.log('API not ready', error);
+        toast.error("An error occurred while creating the diet plan");
       }
     }
-    
-    setShowModal(false);
   };
 
   // Handle delete diet plan
   const handleDelete = (planId) => {
-    if (window.confirm('Are you sure you want to delete this diet plan?')) {
+    if (window.confirm("Are you sure you want to delete this diet plan?")) {
       // In a real app, dispatch delete action
       // For now, update local state
-      setDietPlans(dietPlans.filter(plan => plan._id !== planId));
-      toast.success('Diet plan deleted successfully');
+      setDietPlans(dietPlans.filter((plan) => plan._id !== planId));
+      toast.success("Diet plan deleted successfully");
     }
   };
 
@@ -271,8 +226,12 @@ const AdminDietPlans = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Diet Plan Management</h1>
-          <p className="text-gray-600 mt-1">Create and manage nutrition plans</p>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Diet Plan Management
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Create and manage nutrition plans
+          </p>
         </div>
         <button
           onClick={() => handleOpenModal()}
@@ -302,7 +261,7 @@ const AdminDietPlans = () => {
       {/* Diet Plans List */}
       <div className="card">
         <h2 className="text-xl font-semibold mb-4">All Diet Plans</h2>
-        {isLoading ? (
+        {apiLoading ? (
           <div className="py-8 text-center">
             <p>Loading diet plans...</p>
           </div>
@@ -320,8 +279,11 @@ const AdminDietPlans = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredPlans.map(plan => (
-              <div key={plan._id} className="border rounded-lg overflow-hidden bg-white">
+            {filteredPlans.map((plan) => (
+              <div
+                key={plan._id}
+                className="border rounded-lg overflow-hidden bg-white"
+              >
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-semibold text-lg">{plan.title}</h3>
@@ -329,49 +291,67 @@ const AdminDietPlans = () => {
                       {plan.targetGroup}
                     </span>
                   </div>
-                  
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{plan.description}</p>
-                  
+
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {plan.description}
+                  </p>
+
                   <div className="grid grid-cols-4 gap-2 mb-4">
                     <div className="bg-gray-50 p-2 rounded text-center">
                       <p className="text-xs text-gray-500">Calories</p>
-                      <p className="font-semibold">{plan.dailyCalories || '—'}</p>
+                      <p className="font-semibold">
+                        {plan.dailyCalories || "—"}
+                      </p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded text-center">
                       <p className="text-xs text-gray-500">Protein</p>
-                      <p className="font-semibold">{plan.protein || '—'} g</p>
+                      <p className="font-semibold">{plan.protein || "—"} g</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded text-center">
                       <p className="text-xs text-gray-500">Carbs</p>
-                      <p className="font-semibold">{plan.carbs || '—'} g</p>
+                      <p className="font-semibold">{plan.carbs || "—"} g</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded text-center">
                       <p className="text-xs text-gray-500">Fat</p>
-                      <p className="font-semibold">{plan.fat || '—'} g</p>
+                      <p className="font-semibold">{plan.fat || "—"} g</p>
                     </div>
                   </div>
-                  
+
                   <div className="text-sm">
                     <p className="font-medium mb-2">Meals:</p>
                     <ul className="space-y-1">
                       {plan.meals && plan.meals.length > 0 ? (
                         plan.meals.slice(0, 3).map((meal, index) => (
-                          <li key={index} className="flex justify-between">
-                            <span className="text-gray-700">{meal.name}</span>
-                            <span className="text-gray-500">{meal.calories} kcal</span>
+                          <li
+                            key={index}
+                            className="flex justify-between items-center"
+                          >
+                            <span className="text-gray-700 text-start">
+                              {meal.time}
+                            </span>
+                            <span className="text-gray-700 text-start">
+                              {meal.name}
+                            </span>
+                            <span className="text-gray-500">
+                              {meal.calories} kcal
+                            </span>
                           </li>
                         ))
                       ) : (
-                        <li className="text-gray-500 italic">No meals defined</li>
+                        <li className="text-gray-500 italic">
+                          No meals defined
+                        </li>
                       )}
-                      
+
                       {plan.meals && plan.meals.length > 3 && (
-                        <li className="text-primary text-xs">+ {plan.meals.length - 3} more meals</li>
+                        <li className="text-primary text-xs">
+                          + {plan.meals.length - 3} more meals
+                        </li>
                       )}
                     </ul>
                   </div>
                 </div>
-                
+
                 <div className="border-t p-3 bg-gray-50 flex justify-end space-x-2">
                   <button
                     onClick={() => handleOpenModal(plan)}
@@ -394,10 +374,10 @@ const AdminDietPlans = () => {
 
       {/* Add/Edit Diet Plan Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 !-mt-8 pt-8 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 w-full max-w-5xl mx-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-semibold mb-4">
-              {selectedPlan ? 'Edit Diet Plan' : 'Add New Diet Plan'}
+              {selectedPlan ? "Edit Diet Plan" : "Add New Diet Plan"}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
@@ -415,9 +395,12 @@ const AdminDietPlans = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-gray-700 mb-2" htmlFor="description">
+                  <label
+                    className="block text-gray-700 mb-2"
+                    htmlFor="description"
+                  >
                     Description*
                   </label>
                   <textarea
@@ -430,9 +413,12 @@ const AdminDietPlans = () => {
                     required
                   ></textarea>
                 </div>
-                
+
                 <div>
-                  <label className="block text-gray-700 mb-2" htmlFor="targetGroup">
+                  <label
+                    className="block text-gray-700 mb-2"
+                    htmlFor="targetGroup"
+                  >
                     Target Group*
                   </label>
                   <select
@@ -444,15 +430,20 @@ const AdminDietPlans = () => {
                     required
                   >
                     <option value="">Select Target Group</option>
-                    {targetGroups.map(group => (
-                      <option key={group} value={group}>{group}</option>
+                    {targetGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-gray-700 mb-2" htmlFor="dailyCalories">
+                    <label
+                      className="block text-gray-700 mb-2"
+                      htmlFor="dailyCalories"
+                    >
                       Daily Calories
                     </label>
                     <input
@@ -465,9 +456,12 @@ const AdminDietPlans = () => {
                       onChange={handleChange}
                     />
                   </div>
-                  
+
                   <div>
-                    <label className="block text-gray-700 mb-2" htmlFor="protein">
+                    <label
+                      className="block text-gray-700 mb-2"
+                      htmlFor="protein"
+                    >
                       Protein (g)
                     </label>
                     <input
@@ -480,7 +474,7 @@ const AdminDietPlans = () => {
                       onChange={handleChange}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-gray-700 mb-2" htmlFor="carbs">
                       Carbs (g)
@@ -495,7 +489,7 @@ const AdminDietPlans = () => {
                       onChange={handleChange}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-gray-700 mb-2" htmlFor="fat">
                       Fat (g)
@@ -511,7 +505,7 @@ const AdminDietPlans = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <label className="block text-gray-700">Meals</label>
@@ -524,10 +518,13 @@ const AdminDietPlans = () => {
                       Add Meal
                     </button>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {formData.meals.map((meal, index) => (
-                      <div key={index} className="border p-4 rounded-md bg-gray-50">
+                      <div
+                        key={index}
+                        className="border p-4 rounded-md bg-gray-50"
+                      >
                         <div className="flex justify-between mb-3">
                           <h4 className="font-medium">{`Meal ${index + 1}`}</h4>
                           {formData.meals.length > 1 && (
@@ -540,8 +537,8 @@ const AdminDietPlans = () => {
                             </button>
                           )}
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">
                               Meal Name
@@ -550,11 +547,13 @@ const AdminDietPlans = () => {
                               type="text"
                               className="form-input"
                               value={meal.name}
-                              onChange={(e) => handleMealChange(index, 'name', e.target.value)}
+                              onChange={(e) =>
+                                handleMealChange(index, "name", e.target.value)
+                              }
                               required
                             />
                           </div>
-                          
+
                           <div className="md:col-span-1">
                             <label className="block text-xs text-gray-500 mb-1">
                               Calories
@@ -564,10 +563,30 @@ const AdminDietPlans = () => {
                               className="form-input"
                               min="0"
                               value={meal.calories}
-                              onChange={(e) => handleMealChange(index, 'calories', e.target.value)}
+                              onChange={(e) =>
+                                handleMealChange(
+                                  index,
+                                  "calories",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
-                          
+                          <div className="md:col-span-1">
+                            <label className="block text-xs text-gray-500 mb-1">
+                              Time
+                            </label>
+                            <input
+                              type="time"
+                              className="form-input"
+                              min="0"
+                              value={meal.time}
+                              onChange={(e) =>
+                                handleMealChange(index, "time", e.target.value)
+                              }
+                            />
+                          </div>
+
                           <div className="md:col-span-1">
                             <label className="block text-xs text-gray-500 mb-1">
                               Foods
@@ -576,7 +595,9 @@ const AdminDietPlans = () => {
                               type="text"
                               className="form-input"
                               value={meal.foods}
-                              onChange={(e) => handleMealChange(index, 'foods', e.target.value)}
+                              onChange={(e) =>
+                                handleMealChange(index, "foods", e.target.value)
+                              }
                               placeholder="e.g., Eggs, Toast, Avocado"
                             />
                           </div>
@@ -585,14 +606,18 @@ const AdminDietPlans = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-4 pt-2">
                   <button
                     type="submit"
                     className="btn btn-primary flex-1"
-                    disabled={isLoading}
+                    disabled={apiLoading}
                   >
-                    {isLoading ? 'Saving...' : selectedPlan ? 'Update Diet Plan' : 'Create Diet Plan'}
+                    {apiLoading
+                      ? "Saving..."
+                      : selectedPlan
+                      ? "Update Diet Plan"
+                      : "Create Diet Plan"}
                   </button>
                   <button
                     type="button"
@@ -611,4 +636,4 @@ const AdminDietPlans = () => {
   );
 };
 
-export default AdminDietPlans; 
+export default AdminDietPlans;
