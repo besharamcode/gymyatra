@@ -1,15 +1,15 @@
-import User from '../models/User.js';
-import Plan from '../models/Plan.js';
-import Exercise from '../models/Exercise.js';
-import DietPlan from '../models/DietPlan.js';
-import Progress from '../models/Progress.js';
+import User from "../models/User.js";
+import Plan from "../models/Plan.js";
+import Exercise from "../models/Exercise.js";
+import DietPlan from "../models/DietPlan.js";
+import Progress from "../models/Progress.js";
 
 // @desc    Get all users
 // @route   GET /api/admin/users
 // @access  Private/Admin
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: 'user' }).select('-password');
+    const users = await User.find({ role: "user" }).select("-password");
 
     res.json({
       success: true,
@@ -20,7 +20,7 @@ export const getUsers = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -30,12 +30,12 @@ export const getUsers = async (req, res) => {
 // @access  Private/Admin
 export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findById(req.params.id).select("-password");
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
+        message: "User not found",
       });
     }
 
@@ -47,7 +47,7 @@ export const getUserById = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -76,7 +76,7 @@ export const createExercise = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -97,7 +97,7 @@ export const getExercises = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -109,7 +109,7 @@ export const createDietPlan = async (req, res) => {
   try {
     const dietPlan = await DietPlan.create({
       ...req.body,
-      createdBy: req.user._id,
+      createdBy: "681260652bacc8d977ee6114",
     });
 
     res.status(201).json({
@@ -120,7 +120,28 @@ export const createDietPlan = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
+    });
+  }
+};
+
+export const createMultipleDietPlan = async (req, res) => {
+  try {
+    for (const body of req.body) {
+      const dietPlan = await DietPlan.create({
+        ...body,
+        createdBy: "681260652bacc8d977ee6114",
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
     });
   }
 };
@@ -141,7 +162,7 @@ export const getDietPlans = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -175,7 +196,7 @@ export const createPlan = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -187,7 +208,7 @@ export const getUserProgress = async (req, res) => {
   try {
     const progress = await Progress.find({ userId: req.params.userId })
       .sort({ date: -1 })
-      .populate('completedExercises.exercise');
+      .populate("completedExercises.exercise");
 
     res.json({
       success: true,
@@ -198,7 +219,7 @@ export const getUserProgress = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
 };
@@ -208,14 +229,23 @@ export const getUserProgress = async (req, res) => {
 // @access  Private/Admin
 export const updateDietPlan = async (req, res) => {
   try {
-    const { title, description, targetGroup, dailyCalories, protein, carbs, fat, meals } = req.body;
+    const {
+      title,
+      description,
+      targetGroup,
+      dailyCalories,
+      protein,
+      carbs,
+      fat,
+      meals,
+    } = req.body;
 
     const dietPlan = await DietPlan.findById(req.params.id);
 
     if (!dietPlan) {
       return res.status(404).json({
         success: false,
-        message: 'Diet plan not found',
+        message: "Diet plan not found",
       });
     }
 
@@ -241,7 +271,7 @@ export const updateDietPlan = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: "Server error",
     });
   }
-}; 
+};
