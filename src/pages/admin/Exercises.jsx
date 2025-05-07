@@ -1,64 +1,91 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { FiPlus, FiEdit, FiTrash2, FiActivity } from 'react-icons/fi';
-import { toast } from 'react-toastify';
-import { getExercises, createExercise } from '../../redux/exerciseSlice';
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+  FiSearch,
+  FiFilter,
+  FiCheckCircle,
+  FiXCircle,
+} from "react-icons/fi";
+import { toast } from "react-toastify";
+import { motion } from "framer-motion";
+import { getExercises, createExercise } from "../../redux/exerciseSlice";
+import GradientBackground from "../../components/ui/GradientBackground";
+import AnimationWrapper from "../../components/ui/AnimationWrapper";
+import AdminPageLayout from "../../components/ui/AdminPageLayout";
+import AdminCard from "../../components/ui/AdminCard";
 
 // Mock exercises data for demonstration
 const MOCK_EXERCISES = [
   {
-    _id: '1',
-    name: 'Bench Press',
-    description: 'A compound exercise that targets the chest, shoulders, and triceps.',
-    muscleGroup: 'Chest',
-    difficulty: 'intermediate',
-    equipment: 'Barbell, Bench',
-    instructions: 'Lie on a flat bench, grip the barbell, lower to chest, and press up.'
+    _id: "1",
+    name: "Bench Press",
+    description:
+      "A compound exercise that targets the chest, shoulders, and triceps.",
+    muscleGroup: "Chest",
+    difficulty: "intermediate",
+    equipment: "Barbell, Bench",
+    instructions:
+      "Lie on a flat bench, grip the barbell, lower to chest, and press up.",
   },
   {
-    _id: '2',
-    name: 'Squat',
-    description: 'A compound exercise that primarily targets the quadriceps, hamstrings, and glutes.',
-    muscleGroup: 'Legs',
-    difficulty: 'intermediate',
-    equipment: 'Barbell, Rack',
-    instructions: 'Stand with feet shoulder-width apart, barbell on upper back, squat down, and stand up.'
+    _id: "2",
+    name: "Squat",
+    description:
+      "A compound exercise that primarily targets the quadriceps, hamstrings, and glutes.",
+    muscleGroup: "Legs",
+    difficulty: "intermediate",
+    equipment: "Barbell, Rack",
+    instructions:
+      "Stand with feet shoulder-width apart, barbell on upper back, squat down, and stand up.",
   },
   {
-    _id: '3',
-    name: 'Pull-up',
-    description: 'A compound exercise that targets the back, biceps, and shoulders.',
-    muscleGroup: 'Back',
-    difficulty: 'advanced',
-    equipment: 'Pull-up bar',
-    instructions: 'Hang from a pull-up bar with palms facing away, pull up until chin is over the bar.'
-  }
+    _id: "3",
+    name: "Pull-up",
+    description:
+      "A compound exercise that targets the back, biceps, and shoulders.",
+    muscleGroup: "Back",
+    difficulty: "advanced",
+    equipment: "Pull-up bar",
+    instructions:
+      "Hang from a pull-up bar with palms facing away, pull up until chin is over the bar.",
+  },
 ];
 
 const AdminExercises = () => {
   const dispatch = useDispatch();
-  const { exercises: apiExercises, isLoading: apiLoading } = useSelector((state) => state.exercises);
+  const { exercises: apiExercises, isLoading: apiLoading } = useSelector(
+    (state) => state.exercises
+  );
   const [exercises, setExercises] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    muscleGroup: '',
-    difficulty: 'beginner',
-    equipment: '',
-    instructions: '',
+    name: "",
+    description: "",
+    muscleGroup: "",
+    difficulty: "beginner",
+    equipment: "",
+    instructions: "",
   });
-  
+  const [filterMuscleGroup, setFilterMuscleGroup] = useState("");
+
   const muscleGroups = [
-    'Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core', 'Full Body', 'Cardio'
+    "Chest",
+    "Back",
+    "Shoulders",
+    "Arms",
+    "Legs",
+    "Core",
+    "Full Body",
+    "Cardio",
   ];
-  
-  const difficultyLevels = [
-    'beginner', 'intermediate', 'advanced'
-  ];
+
+  const difficultyLevels = ["beginner", "intermediate", "advanced"];
 
   useEffect(() => {
     // Try to fetch from API but fallback to mock data if not available
@@ -66,7 +93,7 @@ const AdminExercises = () => {
     // Set loading state
     setIsLoading(true);
   }, [dispatch]);
-  
+
   useEffect(() => {
     // If API data is available, use it
     if (apiExercises && apiExercises.length > 0) {
@@ -80,9 +107,10 @@ const AdminExercises = () => {
   }, [apiExercises, apiLoading]);
 
   // Filter exercises based on search term
-  const filteredExercises = exercises?.filter(exercise => 
-    exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    exercise.muscleGroup.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredExercises = exercises?.filter(
+    (exercise) =>
+      exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exercise.muscleGroup.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Handle opening the add/edit modal
@@ -94,18 +122,18 @@ const AdminExercises = () => {
         description: exercise.description,
         muscleGroup: exercise.muscleGroup,
         difficulty: exercise.difficulty,
-        equipment: exercise.equipment || '',
-        instructions: exercise.instructions || '',
+        equipment: exercise.equipment || "",
+        instructions: exercise.instructions || "",
       });
     } else {
       setSelectedExercise(null);
       setFormData({
-        name: '',
-        description: '',
-        muscleGroup: '',
-        difficulty: 'beginner',
-        equipment: '',
-        instructions: '',
+        name: "",
+        description: "",
+        muscleGroup: "",
+        difficulty: "beginner",
+        equipment: "",
+        instructions: "",
       });
     }
     setShowModal(true);
@@ -115,295 +143,319 @@ const AdminExercises = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   // Handle form submission (add or update)
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!formData.name || !formData.description || !formData.muscleGroup) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
-    
+
     if (selectedExercise) {
       // Update existing exercise
       const updatedExercise = {
         ...selectedExercise,
-        ...formData
+        ...formData,
       };
-      
+
       // In a real app, dispatch update action here
       // For now, update local state
-      setExercises(exercises.map(ex => 
-        ex._id === selectedExercise._id ? updatedExercise : ex
-      ));
-      toast.success('Exercise updated successfully');
+      setExercises(
+        exercises.map((ex) =>
+          ex._id === selectedExercise._id ? updatedExercise : ex
+        )
+      );
+      toast.success("Exercise updated successfully");
     } else {
       // Add new exercise
       const newExercise = {
         _id: `new-${Date.now()}`,
-        ...formData
+        ...formData,
       };
-      
+
       // In a real app, dispatch create action here
       // For now, update local state
       setExercises([...exercises, newExercise]);
-      toast.success('Exercise added successfully');
-      
+      toast.success("Exercise added successfully");
+
       // Try API call as well (this may fail if the API isn't ready)
       try {
         dispatch(createExercise(formData));
       } catch (error) {
-        console.log('API not ready', error);
+        console.log("API not ready", error);
       }
     }
-    
+
     setShowModal(false);
   };
 
   // Handle delete exercise
   const handleDelete = (exerciseId) => {
-    if (window.confirm('Are you sure you want to delete this exercise?')) {
+    if (window.confirm("Are you sure you want to delete this exercise?")) {
       // In a real app, dispatch delete action
       // For now, update local state
-      setExercises(exercises.filter(ex => ex._id !== exerciseId));
-      toast.success('Exercise deleted successfully');
+      setExercises(exercises.filter((ex) => ex._id !== exerciseId));
+      toast.success("Exercise deleted successfully");
     }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Exercise Management</h1>
-          <p className="text-gray-600 mt-1">Create and manage workout exercises</p>
-        </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="btn btn-primary flex items-center mt-4 md:mt-0"
-        >
-          <FiPlus className="mr-2" />
-          Add New Exercise
-        </button>
-      </div>
-
+    <AdminPageLayout
+      title="Exercise Management"
+      description="Create and manage exercises for workout plans"
+      gradient="blue"
+    >
       {/* Search & Filter */}
-      <div className="card">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              className="form-input pl-10 w-full"
-              placeholder="Search by name or muscle group"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <FiActivity className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <AdminCard className="mb-6">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <input
+                type="text"
+                className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 pl-10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                placeholder="Search exercises..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Exercises List */}
-      <div className="card">
-        <h2 className="text-xl font-semibold mb-4">All Exercises</h2>
-        {isLoading ? (
-          <div className="py-8 text-center">
-            <p>Loading exercises...</p>
-          </div>
-        ) : !filteredExercises || filteredExercises.length === 0 ? (
-          <div className="text-center py-8">
-            <FiActivity className="mx-auto text-4xl text-gray-400 mb-3" />
-            <p className="text-gray-600">No exercises found</p>
-            <button
-              onClick={() => handleOpenModal()}
-              className="mt-4 text-primary hover:underline flex items-center mx-auto"
+          
+          <div className="flex gap-2">
+            <select
+              className="bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+              value={filterMuscleGroup}
+              onChange={(e) => setFilterMuscleGroup(e.target.value)}
             >
-              <FiPlus className="mr-1" />
-              Add your first exercise
+              <option value="">All Muscle Groups</option>
+              {muscleGroups.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
+            
+            <button 
+              onClick={() => setShowModal(true)}
+              className="flex items-center bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <FiPlus className="mr-2" /> Add Exercise
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredExercises.map(exercise => (
-              <div key={exercise._id} className="border rounded-lg overflow-hidden bg-white">
-                <div className="p-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-lg">{exercise.name}</h3>
-                    <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded">
-                      {exercise.muscleGroup}
-                    </span>
+        </div>
+      </AdminCard>
+
+      {/* Exercises List */}
+      <AdminCard title="All Exercises">
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">
+              Loading exercises...
+            </span>
+          </div>
+        ) : filteredExercises.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredExercises.map((exercise) => (
+              <div
+                key={exercise._id}
+                className="bg-card border border-border/50 rounded-xl overflow-hidden hover:shadow-md transition-all duration-200"
+              >
+                <div className="aspect-video bg-primary/10 relative flex items-center justify-center">
+                  {exercise.imageUrl ? (
+                    <img
+                      src={exercise.imageUrl}
+                      alt={exercise.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-4xl text-primary/40">{exercise.name.charAt(0)}</div>
+                  )}
+                  <div className="absolute top-2 right-2 flex space-x-1">
+                    <button
+                      onClick={() => handleEdit(exercise)}
+                      className="p-2 rounded-full bg-background/80 text-foreground hover:bg-background transition-colors"
+                      title="Edit Exercise"
+                    >
+                      <FiEdit size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(exercise._id)}
+                      className="p-2 rounded-full bg-background/80 text-foreground hover:bg-red-500 hover:text-white transition-colors"
+                      title="Delete Exercise"
+                    >
+                      <FiTrash2 size={16} />
+                    </button>
                   </div>
-                  <p className="text-gray-600 text-sm mt-2 line-clamp-2">{exercise.description}</p>
-                  
-                  <div className="flex gap-2 mt-3">
-                    <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg mb-1">{exercise.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {exercise.muscleGroup}
+                  </p>
+                  <p className="text-sm line-clamp-2 mb-3">
+                    {exercise.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
                       {exercise.difficulty}
                     </span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-secondary/10 text-secondary-foreground">
+                      {exercise.type}
+                    </span>
                     {exercise.equipment && (
-                      <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                      <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
                         {exercise.equipment}
                       </span>
                     )}
                   </div>
                 </div>
-                
-                <div className="border-t p-3 bg-gray-50 flex justify-end space-x-2">
-                  <button
-                    onClick={() => handleOpenModal(exercise)}
-                    className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded"
-                  >
-                    <FiEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exercise._id)}
-                    className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                  >
-                    <FiTrash2 />
-                  </button>
-                </div>
               </div>
             ))}
           </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            No exercises found
+          </div>
         )}
-      </div>
+      </AdminCard>
 
       {/* Add/Edit Exercise Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-4">
-              {selectedExercise ? 'Edit Exercise' : 'Add New Exercise'}
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card glass-effect text-card-foreground rounded-xl border border-border/30 shadow-lg p-6 w-full max-w-2xl m-4"
+          >
+            <h2 className="text-xl font-semibold mb-6">
+              {selectedExercise ? "Edit Exercise" : "Add New Exercise"}
             </h2>
+
             <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-gray-700 mb-2" htmlFor="name">
-                    Exercise Name*
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Exercise Name *
                   </label>
                   <input
                     type="text"
-                    className="form-input"
-                    id="name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
+                    className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     required
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-gray-700 mb-2" htmlFor="description">
-                    Description*
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Muscle Group *
+                  </label>
+                  <select
+                    name="muscleGroup"
+                    value={formData.muscleGroup}
+                    onChange={handleChange}
+                    className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    required
+                  >
+                    <option value="">Select Muscle Group</option>
+                    {muscleGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Difficulty Level
+                  </label>
+                  <select
+                    name="difficulty"
+                    value={formData.difficulty}
+                    onChange={handleChange}
+                    className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    {difficultyLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Equipment
+                  </label>
+                  <input
+                    type="text"
+                    name="equipment"
+                    value={formData.equipment}
+                    onChange={handleChange}
+                    className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    placeholder="E.g., Barbell, Dumbbells, Machine"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Description *
                   </label>
                   <textarea
-                    className="form-input"
-                    id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows="3"
+                    className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     required
                   ></textarea>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-700 mb-2" htmlFor="muscleGroup">
-                      Muscle Group*
-                    </label>
-                    <select
-                      className="form-input"
-                      id="muscleGroup"
-                      name="muscleGroup"
-                      value={formData.muscleGroup}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Muscle Group</option>
-                      {muscleGroups.map(group => (
-                        <option key={group} value={group}>{group}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-700 mb-2" htmlFor="difficulty">
-                      Difficulty Level*
-                    </label>
-                    <select
-                      className="form-input"
-                      id="difficulty"
-                      name="difficulty"
-                      value={formData.difficulty}
-                      onChange={handleChange}
-                      required
-                    >
-                      {difficultyLevels.map(level => (
-                        <option key={level} value={level}>
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-2" htmlFor="equipment">
-                    Equipment (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    id="equipment"
-                    name="equipment"
-                    value={formData.equipment}
-                    onChange={handleChange}
-                    placeholder="e.g., Dumbbells, Barbell, Machine"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-2" htmlFor="instructions">
-                    Step-by-Step Instructions (Optional)
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Instructions
                   </label>
                   <textarea
-                    className="form-input"
-                    id="instructions"
                     name="instructions"
                     value={formData.instructions}
                     onChange={handleChange}
                     rows="4"
-                    placeholder="Provide detailed instructions for performing this exercise"
+                    className="w-full bg-background/50 border border-border/50 rounded-lg py-2 px-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    placeholder="Step-by-step instructions for performing the exercise"
                   ></textarea>
                 </div>
-                
-                <div className="flex items-center space-x-4 pt-2">
-                  <button
-                    type="submit"
-                    className="btn btn-primary flex-1"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Saving...' : selectedExercise ? 'Update Exercise' : 'Add Exercise'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline flex-1"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="bg-background/50 border border-border text-foreground hover:bg-background/80 px-4 py-2 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg transition-colors"
+                >
+                  {selectedExercise ? "Update Exercise" : "Add Exercise"}
+                </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
-    </div>
+    </AdminPageLayout>
   );
 };
 
-export default AdminExercises; 
+export default AdminExercises;

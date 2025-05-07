@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { FiPlus, FiBarChart2, FiCalendar, FiActivity } from 'react-icons/fi';
+import { FiPlus, FiBarChart2, FiCalendar, FiActivity, FiTrash2 } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,11 +10,15 @@ import {
   PointElement,
   LineElement,
   Title,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { getProgressHistory, submitProgress } from '../../redux/progressSlice';
 import { getUserPlans } from '../../redux/planSlice';
+import Tooltip from '../../components/ui/Tooltip';
+import { CardSkeleton, ChartSkeleton } from '../../components/ui/Skeleton';
+import GreetingHeader from '../../components/ui/GreetingHeader';
 
 // Register Chart.js components
 ChartJS.register(
@@ -23,13 +27,14 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  Tooltip,
-  Legend
+  ChartTooltip,
+  Legend,
+  Filler
 );
 
 const ProgressTracker = () => {
   const { user } = useSelector((state) => state.auth);
-  const { progressHistory, isLoading } = useSelector((state) => state.progress);
+  const { progressHistory, isLoading: progressLoading } = useSelector((state) => state.progress);
   const { userPlans, isLoading: plansLoading } = useSelector((state) => state.plans);
   
   const dispatch = useDispatch();
@@ -90,7 +95,14 @@ const ProgressTracker = () => {
           data: recentEntries.map(entry => entry.weight),
           borderColor: '#1E40AF',
           backgroundColor: 'rgba(30, 64, 175, 0.2)',
+          fill: true,
           tension: 0.3,
+          borderWidth: 2,
+          pointBackgroundColor: '#1E40AF',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 1,
+          pointRadius: 4,
+          pointHoverRadius: 6,
         },
       ],
     };
@@ -101,15 +113,83 @@ const ProgressTracker = () => {
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          font: {
+            size: 12,
+            weight: 'bold',
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleFont: {
+          size: 14,
+          weight: 'bold',
+        },
+        bodyFont: {
+          size: 12,
+        },
+        padding: 10,
+        cornerRadius: 4,
+        titleMarginBottom: 8,
+        displayColors: false,
+        callbacks: {
+          label: function(context) {
+            return `Weight: ${context.formattedValue} kg`;
+          }
+        }
       },
       title: {
         display: true,
-        text: 'Weight Progress',
+        text: 'Weight Progress Over Time',
+        font: {
+          size: 16,
+          weight: 'bold',
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
       },
     },
     scales: {
       y: {
         beginAtZero: false,
+        ticks: {
+          font: {
+            size: 12,
+          },
+          callback: function(value) {
+            return value + ' kg';
+          }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+        },
+      },
+      x: {
+        ticks: {
+          font: {
+            size: 12,
+          },
+        },
+        grid: {
+          display: false,
+        },
+      },
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeOutQuart',
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    elements: {
+      line: {
+        borderJoinStyle: 'round',
       },
     },
   };
@@ -194,225 +274,273 @@ const ProgressTracker = () => {
     setSelectedExercises([]);
   };
 
+  const isLoading = progressLoading || plansLoading;
+  const chartData = prepareChartData();
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Progress Tracker</h1>
-          <p className="text-gray-600 mt-1">Log your workouts and track your progress</p>
-        </div>
-      </div>
+    <div className="space-y-8 animate-fadeIn">
+      <GreetingHeader 
+        name={user?.user?.name || 'User'}
+        className="mb-6"
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Progress Chart */}
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Weight Progress</h2>
-          
-          {isLoading ? (
-            <div className="py-8 text-center">
-              <p>Loading progress data...</p>
-            </div>
-          ) : progressHistory && progressHistory.length > 0 ? (
-            <div className="chart-container" style={{ height: '300px' }}>
-              <Line data={prepareChartData()} options={chartOptions} />
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <FiBarChart2 className="mx-auto text-4xl text-gray-400 mb-3" />
-              <p className="text-gray-600">No progress data yet</p>
-              <p className="text-sm text-gray-500 mt-1">Log your first workout below to start tracking</p>
-            </div>
-          )}
-        </div>
-
-        {/* Recent Activity */}
-        <div className="card">
-          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-          
-          {isLoading ? (
-            <div className="py-4 text-center">
-              <p>Loading recent activity...</p>
-            </div>
-          ) : progressHistory && progressHistory.length > 0 ? (
-            <div className="space-y-4">
-              {progressHistory.slice(0, 5).map((entry, index) => (
-                <div key={entry._id || index} className="border-b pb-4 last:border-0">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center">
-                        <FiCalendar className="text-primary mr-2" />
-                        <span className="font-medium">
-                          {new Date(entry.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Weight: {entry.weight} kg
-                      </p>
-                    </div>
-                    <span className="text-sm bg-primary/10 text-primary px-2 py-1 rounded">
-                      {entry.completedExercises.length} exercises
-                    </span>
-                  </div>
-                  
-                  {entry.notes && (
-                    <p className="text-sm text-gray-500 mt-2 italic">
-                      "{entry.notes}"
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <FiActivity className="mx-auto text-4xl text-gray-400 mb-3" />
-              <p className="text-gray-600">No workout history yet</p>
-              <p className="text-sm text-gray-500 mt-1">Log your first workout below</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Log Workout Form */}
+      {/* Weight Progress Chart */}
       <div className="card">
-        <h2 className="text-xl font-semibold mb-4">Log Today's Workout</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Weight Progress</h2>
+          <Tooltip text="Track your weight changes over time to monitor your fitness journey." position="left">
+            <span className="text-sm text-gray-500">Understanding your chart</span>
+          </Tooltip>
+        </div>
+        
+        {isLoading ? (
+          <ChartSkeleton />
+        ) : chartData ? (
+          <div className="animate-scaleIn">
+            <Line data={chartData} options={chartOptions} />
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-600 mb-2">No weight data recorded yet</p>
+            <p className="text-sm text-gray-500">Log your progress below to start tracking</p>
+          </div>
+        )}
+      </div>
+
+      {/* Log Progress Form */}
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-6">Log Today's Progress</h2>
         
         <form onSubmit={onSubmit}>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="weight">
-                Current Weight (kg)
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2" htmlFor="weight">
+              Current Weight (kg)
+              <Tooltip text="Enter your current weight in kilograms.">
+                <span></span>
+              </Tooltip>
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              className="form-input"
+              id="weight"
+              name="weight"
+              value={formData.weight}
+              onChange={onChange}
+              placeholder="Enter your weight"
+              min="20"
+              max="250"
+            />
+          </div>
+          
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-gray-700 font-medium" htmlFor="exercises">
+                Completed Exercises
+                <Tooltip text="Add the exercises you completed today along with the sets, reps, and weight.">
+                  <span></span>
+                </Tooltip>
               </label>
-              <input
-                type="number"
-                min="30"
-                step="0.1"
-                className="form-input"
-                id="weight"
-                name="weight"
-                value={formData.weight}
-                onChange={onChange}
-                placeholder="Enter your current weight"
-                required
-              />
+              <button
+                type="button"
+                onClick={addExercise}
+                className="flex items-center text-primary font-medium text-sm"
+              >
+                <FiPlus className="mr-1" /> Add Exercise
+              </button>
             </div>
             
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-gray-700">Completed Exercises</label>
-                <button
-                  type="button"
-                  onClick={addExercise}
-                  className="text-primary flex items-center text-sm hover:underline"
-                >
-                  <FiPlus className="mr-1" />
-                  Add Exercise
-                </button>
-              </div>
-              
-              {selectedExercises.length === 0 ? (
-                <div className="text-center py-6 border border-dashed border-gray-300 rounded-md">
-                  <p className="text-gray-500">No exercises added yet</p>
-                  <button
-                    type="button"
-                    onClick={addExercise}
-                    className="mt-2 text-primary hover:underline text-sm"
-                  >
-                    Add your first exercise
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {selectedExercises.map((ex, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-4 border rounded-md bg-gray-50">
+            {selectedExercises.length > 0 ? (
+              <div className="space-y-4">
+                {selectedExercises.map((exercise, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50 animate-fadeIn">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium">Exercise #{index + 1}</h4>
+                      <button
+                        type="button"
+                        onClick={() => removeExercise(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="md:col-span-2">
-                        <label className="block text-xs text-gray-500 mb-1">Exercise</label>
+                        <label className="block text-sm text-gray-600 mb-1">Exercise</label>
                         <select
                           className="form-input"
-                          value={ex.exercise}
+                          value={exercise.exercise}
                           onChange={(e) => handleExerciseChange(index, 'exercise', e.target.value)}
                           required
                         >
-                          <option value="">Select Exercise</option>
-                          {availableExercises.map((exercise) => (
-                            <option key={exercise._id} value={exercise._id}>
-                              {exercise.name}
+                          <option value="">Select an exercise</option>
+                          {availableExercises.map((ex) => (
+                            <option key={ex._id} value={ex._id}>
+                              {ex.name}
                             </option>
                           ))}
                         </select>
                       </div>
+                      
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Sets</label>
+                        <label className="block text-sm text-gray-600 mb-1">Sets</label>
                         <input
                           type="number"
-                          min="1"
                           className="form-input"
-                          value={ex.sets}
+                          value={exercise.sets}
                           onChange={(e) => handleExerciseChange(index, 'sets', e.target.value)}
+                          placeholder="Sets"
+                          min="1"
                           required
                         />
                       </div>
+                      
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">Reps</label>
+                        <label className="block text-sm text-gray-600 mb-1">Reps</label>
                         <input
                           type="number"
-                          min="1"
                           className="form-input"
-                          value={ex.reps}
+                          value={exercise.reps}
                           onChange={(e) => handleExerciseChange(index, 'reps', e.target.value)}
+                          placeholder="Reps"
+                          min="1"
                           required
                         />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Weight (kg)</label>
-                        <div className="flex">
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            className="form-input flex-1"
-                            value={ex.weight}
-                            onChange={(e) => handleExerciseChange(index, 'weight', e.target.value)}
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeExercise(index)}
-                            className="ml-2 px-3 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                          >
-                            ×
-                          </button>
-                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="notes">
-                Notes (Optional)
-              </label>
-              <textarea
-                className="form-input"
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={onChange}
-                placeholder="Any notes about today's workout..."
-                rows="3"
-              ></textarea>
-            </div>
-            
-            <button
-              type="submit"
-              className="btn btn-primary w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Saving...' : 'Log Workout'}
-            </button>
+                    
+                    <div className="mt-3">
+                      <label className="block text-sm text-gray-600 mb-1">Weight (kg)</label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        className="form-input"
+                        value={exercise.weight}
+                        onChange={(e) => handleExerciseChange(index, 'weight', e.target.value)}
+                        placeholder="Weight used"
+                        min="0"
+                        required
+                      />
+                    </div>
+                    
+                    {/* Display exercise image if available */}
+                    {exercise.exercise && availableExercises.length > 0 && (
+                      <div className="mt-3">
+                        {(() => {
+                          const selectedExercise = availableExercises.find(
+                            (ex) => ex._id === exercise.exercise
+                          );
+                          if (selectedExercise && selectedExercise.imageUrl) {
+                            return (
+                              <div className="mt-2">
+                                <img 
+                                  src={selectedExercise.imageUrl} 
+                                  alt={selectedExercise.name}
+                                  className="h-24 object-cover rounded-md border border-gray-200"
+                                />
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                <p className="text-gray-500">No exercises added yet. Click "Add Exercise" to begin.</p>
+              </div>
+            )}
           </div>
+          
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2" htmlFor="notes">
+              Notes (Optional)
+            </label>
+            <textarea
+              className="form-input h-24"
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={onChange}
+              placeholder="How did you feel during today's workout? Any challenges or achievements?"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            className="btn btn-primary w-full md:w-auto transition-all-smooth transform hover:scale-105"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Submitting...' : 'Log Progress'}
+          </button>
         </form>
+      </div>
+
+      {/* Progress History */}
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-4">Recent Progress History</h2>
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        ) : progressHistory && progressHistory.length > 0 ? (
+          <div className="space-y-4">
+            {progressHistory.slice(0, 5).map((entry) => (
+              <div 
+                key={entry._id} 
+                className="border-b pb-4 last:border-0 animate-slideIn hover:bg-gray-50 p-3 rounded transition-all-smooth"
+              >
+                <div className="flex justify-between">
+                  <h3 className="font-semibold">
+                    {new Date(entry.date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </h3>
+                  <span className="text-primary font-medium">{entry.weight} kg</span>
+                </div>
+                
+                <div className="mt-2">
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">Completed Exercises:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {entry.completedExercises.map((ex, i) => (
+                      <div key={i} className="text-sm bg-gray-50 p-2 rounded flex items-center">
+                        <div className="bg-primary/10 p-1 rounded mr-2">
+                          <FiActivity className="text-primary" size={14} />
+                        </div>
+                        <div>
+                          <span className="font-medium">{ex.exercise.name}</span>
+                          <div className="text-xs text-gray-500">
+                            {ex.sets} sets × {ex.reps} reps × {ex.weight} kg
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {entry.notes && (
+                  <div className="mt-2 text-sm text-gray-600 italic">
+                    <span className="font-medium">Notes:</span> {entry.notes}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-600">No progress entries yet</p>
+            <p className="text-sm mt-2">Start logging your workouts to track your progress</p>
+          </div>
+        )}
       </div>
     </div>
   );

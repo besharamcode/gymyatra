@@ -6,12 +6,20 @@ import { ToastContainer } from 'react-toastify'
 import App from './App'
 import './index.css'
 import 'react-toastify/dist/ReactToastify.css'
+import { ThemeProvider } from './providers/ThemeProvider'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ThemeProvider defaultTheme="light" storageKey="gymyatra-theme">
+        <App />
+        <ToastContainer 
+          position="top-right" 
+          autoClose={3000}
+          theme="colored"
+          className="text-sm" 
+        />
+      </ThemeProvider>
     </Provider>
   </React.StrictMode>,
 ) 
