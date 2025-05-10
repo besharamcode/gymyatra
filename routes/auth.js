@@ -4,13 +4,15 @@ import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Register route
+// Public routes
 router.post('/register', authController.register);
-
-// Login route
 router.post('/login', authController.login);
+router.post('/forgot-password', authController.forgotPassword);
+router.put('/reset-password/:token', authController.resetPassword);
 
-// Get current user
+// Protected routes
 router.get('/me', protect, authController.getMe);
+router.put('/profile', protect, authController.updateProfile);
+router.put('/password', protect, authController.updatePassword);
 
 export default router; 
